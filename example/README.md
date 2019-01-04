@@ -1,0 +1,3 @@
+# example
+
+Abstract widget example.
