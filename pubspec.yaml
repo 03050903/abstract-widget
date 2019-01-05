@@ -1,8 +1,8 @@
 name: abstract_widget
 description: Generic widget that builds itself depending on the derived class of current value.
 version: 1.0.0
-author:
-homepage:
+author: Tomasz Wyrowinski <tomwyr@hotmail.com>
+homepage: https://github.com/tomwyr/abstract-widget/
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
