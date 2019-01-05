@@ -117,10 +117,12 @@ and</li><li>any ambient state obtained from the <code>context</code> using
     <section class="summary source-code" id="source">
       <h2><span>Implementation</span> </h2>
       <pre class="language-dart"><code class="language-dart">@override
-Widget build(BuildContext context) =&gt;
-    _builders[_currentType]?.call(value) ??
-    _contextBuilders[_currentType]?.call(context, value) ??
-    _throwUnknownType;</code></pre>
+Widget build(BuildContext context) {
+  final builder = _builders.values.cast&lt;Wrapper&gt;().firstWhere(
+      (it) =&gt; it.isDerived(value),
+      orElse: () =&gt; _throwUnknownType);
+  return builder.buildWidget(context, value) ?? _throwNullWidget();
+}</code></pre>
     </section>
 
   </div> <!-- /.main-content -->

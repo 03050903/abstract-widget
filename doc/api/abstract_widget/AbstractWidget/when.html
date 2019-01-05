@@ -84,15 +84,14 @@
     </section>
     <section class="desc markdown">
       <p>Registers derived class builder that builds the widget depending
-on current value of <code>T</code>.</p>
+on current type of <code>value</code>.</p>
     </section>
     
     <section class="summary source-code" id="source">
       <h2><span>Implementation</span> </h2>
       <pre class="language-dart"><code class="language-dart">void when&lt;R extends T&gt;(DerivedBuilder&lt;R&gt; builder) {
-  _assertType(R);
-  _contextBuilders.remove(R);
-  _builders[R] = builder;
+  _validateBuilder(R, builder);
+  _builders[R] = BuilderWrapper&lt;T, R&gt;(builder);
 }</code></pre>
     </section>
 
