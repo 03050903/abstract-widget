@@ -1,3 +1,4 @@
+import 'package:abstract_widget/wrapper.dart';
 import 'package:flutter/widgets.dart';
 
 typedef Widget DerivedBuilder<T>(T value);
@@ -13,49 +14,52 @@ class AbstractWidget<T> extends StatelessWidget {
   /// registered builders are subtypes of [T].
   final bool assertTypes;
 
-  final Map<Type, dynamic> _builders = Map();
-  final Map<Type, dynamic> _contextBuilders = Map();
-
-  Type get _currentType => value.runtimeType;
-
-  List<Type> get _types =>
-      []..addAll(_builders.keys)..addAll(_contextBuilders.keys);
+  final Map<Type, dynamic> _builders = {};
 
   /// Registers derived class builder that builds the widget depending
-  /// on current value of [T].
+  /// on current type of [value].
   void when<R extends T>(DerivedBuilder<R> builder) {
-    _assertType(R);
-    _contextBuilders.remove(R);
-    _builders[R] = builder;
+    _validateBuilder(R, builder);
+    _builders[R] = BuilderWrapper<T, R>(builder);
   }
 
   /// Registers derived class builder that builds the widget depending
-  /// on [BuildContext] and current value of [T].
+  /// on [BuildContext] and current type of [value].
   void contextWhen<R extends T>(ContextDerivedBuilder<R> builder) {
-    _assertType(R);
-    _builders.remove(R);
-    _contextBuilders[R] = builder;
+    _validateBuilder(R, builder);
+    _builders[R] = ContextBuilderWrapper<T, R>(builder);
   }
 
-  void _assertType(Type derivedType) {
-    if (assertTypes) {
-      assert(derivedType != Null, _incompatibleTypeMsg);
+  void _validateBuilder(Type derivedType, dynamic builder) {
+    if (builder == null) {
+      _throwNullBuilder(derivedType);
+    }
+    if (assertTypes && derivedType == Null) {
+      _throwIncompatibleType;
     }
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _builders[_currentType]?.call(value) ??
-      _contextBuilders[_currentType]?.call(context, value) ??
-      _throwUnknownType;
+  Widget build(BuildContext context) {
+    final builder = _builders.values.cast<Wrapper>().firstWhere(
+        (it) => it.isDerived(value),
+        orElse: () => _throwUnknownType);
+    return builder.buildWidget(context, value) ?? _throwNullWidget();
+  }
 
   get _throwUnknownType =>
       throw Exception("Attempted to build AbstractBuilder for unknown type: " +
-          "${value.runtimeType}. Available types were: ${_types.toString()}.");
+          "${value.runtimeType}. Registered types were: ${_builders.keys}.");
 
-  String get _incompatibleTypeMsg =>
+  get _throwIncompatibleType => throw Exception(
       "Attempted to register DerivedBuilder of type argument that is not " +
-      "subtype of $T. Either make sure all AbstractWidget builders have " +
-      "correct type or disable type checking by setting \'assertTypes\' " +
-      "parameter to false.";
+          "subtype of $T. Either make sure all AbstractWidget builders have " +
+          "correct type or disable type checking by setting \'assertTypes\' " +
+          "parameter to false.");
+
+  get _throwNullWidget => throw Exception(
+      "DerivedBuilder of type ${value.runtimeType} has returned null widget.");
+
+  void _throwNullBuilder(Type derivedType) =>
+      throw Exception("Attempted to register for derived type: $derivedType.");
 }
