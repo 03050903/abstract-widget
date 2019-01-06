@@ -32,10 +32,10 @@ class AbstractWidget<T> extends StatelessWidget {
 
   void _validateBuilder(Type derivedType, dynamic builder) {
     if (builder == null) {
-      _throwNullBuilder(derivedType);
+      throw _nullBuilderError(derivedType);
     }
     if (assertTypes && derivedType == Null) {
-      _throwIncompatibleType;
+      throw _incompatibleTypeError;
     }
   }
 
@@ -43,23 +43,23 @@ class AbstractWidget<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final builder = _builders.values.cast<Wrapper>().firstWhere(
         (it) => it.isDerived(value),
-        orElse: () => _throwUnknownType);
-    return builder.buildWidget(context, value) ?? _throwNullWidget();
+        orElse: () => throw _unknownTypeError);
+    return builder.buildWidget(context, value) ?? (throw _nullWidgetError);
   }
 
-  get _throwUnknownType =>
-      throw Exception("Attempted to build AbstractBuilder for unknown type: " +
-          "${value.runtimeType}. Registered types were: ${_builders.keys}.");
+  Exception _nullBuilderError(Type derivedType) => Exception(
+      "Attempted to register null builder for derived type: $derivedType.");
 
-  get _throwIncompatibleType => throw Exception(
+  Exception get _incompatibleTypeError => Exception(
       "Attempted to register DerivedBuilder of type argument that is not " +
           "subtype of $T. Either make sure all AbstractWidget builders have " +
           "correct type or disable type checking by setting \'assertTypes\' " +
           "parameter to false.");
 
-  get _throwNullWidget => throw Exception(
-      "DerivedBuilder of type ${value.runtimeType} has returned null widget.");
+  Exception get _unknownTypeError =>
+      Exception("Attempted to build AbstractBuilder for unknown type: " +
+          "${value.runtimeType}. Registered types were: ${_builders.keys}.");
 
-  void _throwNullBuilder(Type derivedType) =>
-      throw Exception("Attempted to register for derived type: $derivedType.");
+  Exception get _nullWidgetError => Exception(
+      "DerivedBuilder of type ${value.runtimeType} has returned null widget.");
 }
